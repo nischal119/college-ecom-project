@@ -76,7 +76,6 @@ const Login = () => {
                 color: "blue",
                 cursor: "pointer",
                 fontSize: "18px",
-                marginLeft: "47%",
               }}
             >
               Forgot Password?
