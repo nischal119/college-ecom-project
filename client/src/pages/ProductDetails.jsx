@@ -9,12 +9,21 @@ const ProductDetails = () => {
   const params = useParams();
   const [product, setProduct] = useState({});
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [role, setRole] = useState(0);
+  useEffect(() => {
+    const data = localStorage.getItem("auth");
+    if (data) {
+      const parseData = JSON.parse(data);
+      setRole(parseData.user.role);
+    }
+  }, []);
   const getProducts = async () => {
     try {
       const { data } = await axios.get(
         `http://localhost:8080/api/v1/product/single-product/${params.slug}`
       );
       setProduct(data?.product);
+
       getRelatedProducts(data.product._id, data.product.category._id);
     } catch (error) {
       console.log(error);
@@ -67,9 +76,11 @@ const ProductDetails = () => {
           <h6>Quantity:{product?.quantity}</h6>
           <h6>Category:{product?.category?.name}</h6>
           <h6>Shipping:{product?.shipping}</h6>
-          <button className="btn btn-primary w-100">
-            Add to Cart <FaCartPlus />
-          </button>
+          {role === 0 && (
+            <button className="btn btn-primary w-100">
+              Add to Cart <FaCartPlus />
+            </button>
+          )}
         </div>
       </div>
       {relatedProducts.length > 0 && (

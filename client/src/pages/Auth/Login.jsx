@@ -26,8 +26,8 @@ const Login = () => {
           user: res?.data?.user,
           token: res?.data?.token,
         });
-        toast.success(`Namastey ${localStorage.getItem("name")}`);
         localStorage.setItem("auth", JSON.stringify(res?.data));
+        toast.success(`Namastey ${localStorage.getItem("name")}`);
 
         navigate(location.state || "/");
       }
