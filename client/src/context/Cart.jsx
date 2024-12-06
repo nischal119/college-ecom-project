@@ -5,13 +5,12 @@ const CartContext = createContext();
 const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     let existingCartItem = localStorage.getItem("cart");
-    if(existingCartItem){
-      setCart(JSON.parse(existingCartItem))
+    if (existingCartItem) {
+      setCart(JSON.parse(existingCartItem));
     }
-},[])
-     
+  }, []);
 
   // console.log({ auth });
   return (
@@ -20,8 +19,6 @@ const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-
-//CUSTOM HOOKS
 
 const useCart = () => useContext(CartContext);
 

@@ -5,6 +5,7 @@ import {
   getOrdersController,
   loginController,
   registerController,
+  sendEmailController,
   testController,
   updateOrderStatusController,
   updateProfileController,
@@ -65,3 +66,4 @@ router.put(
 );
 
 //sending email function
+router.post("/send-email", sendEmailController);

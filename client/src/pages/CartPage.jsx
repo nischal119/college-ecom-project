@@ -136,8 +136,7 @@ const CartPage = () => {
                     <div className="col-md-4 d-flex justify-content-center align-items-center">
                       <img
                         style={{
-                          minHeight: "200px",
-                          maxHeight: "200px",
+                          width: "100%",
                         }}
                         src={`http://localhost:8080/api/v1/product/product-photo/${groupedItem?._id}`}
                         alt="Card image cap"

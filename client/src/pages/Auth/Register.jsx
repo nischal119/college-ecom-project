@@ -45,58 +45,69 @@ const Register = () => {
       <div className="register">
         <h1>Register</h1>
 
-        <form onSubmit={handelSubmit}>
-          <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">
-              Name <span className="red-star">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="form-control"
-              id="exampleInputEmail1"
-              required
-            />
+        <form
+          onSubmit={handelSubmit}
+          style={{
+            boxShadow: "0px 0px 10px 0px #0000001a",
+            padding: "20px",
+            borderRadius: "10px",
+          }}
+        >
+          <div className="flex-div d-flex justify-content-between">
+            <div className="mb-3 mx-3">
+              <label htmlFor="exampleInputEmail1" className="form-label">
+                Name <span className="red-star">*</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="form-control"
+                id="exampleInputEmail1"
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="exampleInputEmail1" className="form-label">
+                Email <span className="red-star">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="form-control"
+                id="exampleInputEmail1"
+                required
+              />
+            </div>
           </div>
-          <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">
-              Email <span className="red-star">*</span>
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-control"
-              id="exampleInputEmail1"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="exampleInputPassword1" className="form-label">
-              Password <span className="red-star">*</span>
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-control"
-              id="exampleInputPassword1"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">
-              Phone <span className="red-star">*</span>
-            </label>
-            <input
-              type="number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="form-control"
-              id="exampleInputEmail1"
-              required
-            />
+          <div className="flex-div d-flex">
+            <div className="mb-3 mx-3">
+              <label htmlFor="exampleInputPassword1" className="form-label">
+                Password <span className="red-star">*</span>
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="form-control"
+                id="exampleInputPassword1"
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="exampleInputEmail1" className="form-label">
+                Phone <span className="red-star">*</span>
+              </label>
+              <input
+                type="number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="form-control"
+                id="exampleInputEmail1"
+                required
+              />
+            </div>
           </div>
           <div className="mb-3">
             <label htmlFor="exampleInputEmail1" className="form-label">

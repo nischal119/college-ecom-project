@@ -41,7 +41,14 @@ const Login = () => {
       <div className="register">
         <h1>Login</h1>
 
-        <form onSubmit={handelSubmit}>
+        <form
+          onSubmit={handelSubmit}
+          style={{
+            boxShadow: "0px 0px 10px 0px #0000001a",
+            padding: "20px",
+            borderRadius: "10px",
+          }}
+        >
           <div className="mb-3">
             <label htmlFor="exampleInputEmail1" className="form-label">
               Email <span className="red-star">*</span>
@@ -87,7 +94,7 @@ const Login = () => {
         </form>
         <p
           onClick={() => navigate("/register")}
-          className="mt-5 "
+          className="mt-2 "
           style={{
             textDecoration: "underline",
             color: "blue",
