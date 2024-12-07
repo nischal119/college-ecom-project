@@ -20,11 +20,14 @@ const BecomeSeller = () => {
     const adminEmail = "dhungeln12@gmail.com";
 
     try {
-      const response = await axios.post("http://localhost:8080/send-email", {
-        senderName: name,
-        senderEmail: email,
-        adminEmail,
-      });
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/auth/send-email",
+        {
+          senderName: name,
+          senderEmail: email,
+          adminEmail,
+        }
+      );
 
       if (response.data.success) {
         alert("Email sent successfully!");

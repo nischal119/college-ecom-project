@@ -2,6 +2,7 @@ import JWT from "jsonwebtoken";
 import { comparePassword, hashPassword } from "../helpers/authHelper.js";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import nodemailer from "nodemailer";
 export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone, address, answer } = req.body;
@@ -323,16 +324,17 @@ export const updateOrderStatusController = async (req, res) => {
 
 //send email controller
 export const sendEmailController = async (req, res) => {
+  console.log("email");
   try {
     const { senderName, senderEmail, adminEmail } = req.body;
-
     const transporter = nodemailer.createTransport({
-      host: "smtp.forwardemail.net",
-      port: 465,
-      secure: true,
+      host: "smtp.gmail.com",
+      service: "gmail",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.GMAIL_USERNAME,
+        pass: process.env.GMAIL_PASSWORD,
       },
     });
 
