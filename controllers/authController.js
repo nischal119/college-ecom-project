@@ -3,6 +3,7 @@ import { comparePassword, hashPassword } from "../helpers/authHelper.js";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import nodemailer from "nodemailer";
+import User from "../models/userModel.js";
 
 export const registerController = async (req, res) => {
   try {
@@ -325,36 +326,83 @@ export const updateOrderStatusController = async (req, res) => {
 
 //send email controller
 export const sendEmailController = async (req, res) => {
-  console.log("email");
-
   try {
     const { senderName, senderEmail, adminEmail } = req.body;
+
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       service: "gmail",
-      port: 456,
+      port: 456, // Secure connection
       secure: false,
       auth: {
         user: process.env.GMAIL_USER_NAME,
         pass: process.env.GMAIL_PASSWORD,
       },
     });
+
     const mailOptions = {
-      from: senderEmail,
+      from: process.env.GMAIL_USER_NAME, // Ensure the sender matches your SMTP account
       to: adminEmail,
       subject: "Becoming a Seller Inquiry",
-      text: `Hi, I'm ${senderName} (${senderEmail}), and I'm interested in becoming a seller.`,
+      html: `
+        <p>Hi Admin,</p>
+        <p>${senderName} (${senderEmail}) has requested to become a seller.</p>
+        <p>
+      
+      `,
     };
 
     const info = await transporter.sendMail(mailOptions);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Email sent successfully", info });
+    res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      info,
+    });
   } catch (error) {
     console.error("Error sending email:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error sending email", error });
+    let errorMessage = "Error sending email";
+    if (error.code === "EAUTH") {
+      errorMessage = "Authentication failed. Please check your credentials.";
+    } else if (error.code === "ECONNECTION") {
+      errorMessage =
+        "Unable to connect to the email server. Check your network.";
+    }
+
+    res.status(500).json({
+      success: false,
+      message: errorMessage,
+      error: error.message || error,
+    });
+  }
+};
+
+export const authorizeSeller = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Update the user's role to seller
+    user.role = 1;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User with email ${email} has been authorized as a seller.`,
+    });
+  } catch (error) {
+    console.error("Error authorizing seller:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error authorizing seller",
+      error: error.message || error,
+    });
   }
 };

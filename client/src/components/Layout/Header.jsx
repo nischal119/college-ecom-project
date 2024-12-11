@@ -18,6 +18,9 @@ const Header = () => {
       token: null,
     });
     localStorage.removeItem("auth");
+    localStorage.removeItem("cart");
+    localStorage.removeItem("okResponse");
+    localStorage.removeItem("name");
     toast.success("Logout Successfull");
   };
 

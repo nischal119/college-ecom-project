@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  authorizeSeller,
   forgotPasswordController,
   getALlOrdersController,
   getOrdersController,
@@ -67,3 +68,6 @@ router.put(
 
 //sending email function
 router.post("/send-email", sendEmailController);
+
+//authorizing user through email
+// router.get("/authorize-seller/:userId", authorizeSeller);
