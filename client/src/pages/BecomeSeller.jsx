@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 const BecomeSeller = () => {
   const [auth] = useAuth();
   const [okResponse, setOkResponse] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Load state from localStorage on component mount
   useEffect(() => {
@@ -21,6 +22,7 @@ const BecomeSeller = () => {
     const adminEmail = "dhungeln12@gmail.com";
 
     try {
+      setIsLoading(true);
       const response = await axios.post(
         "http://localhost:8080/api/v1/auth/send-email",
         {
@@ -29,13 +31,14 @@ const BecomeSeller = () => {
           adminEmail,
         }
       );
-
       if (response.data.success) {
         toast.success("Email sent successfully.");
         setOkResponse(true);
         localStorage.setItem("okResponse", "true"); // Persist state to localStorage
+        setIsLoading(false);
       } else {
         toast.error("An error occurred while sending the email.");
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error sending email:", error);
@@ -55,9 +58,15 @@ const BecomeSeller = () => {
           <h1 className="text-center">
             Please Contact admin to become a seller
           </h1>
-          <button className="btn btn-primary mt-5" onClick={handleClick}>
-            Contact Now?
-          </button>
+          {isLoading ? (
+            <button className="btn btn-primary" disabled>
+              Sending...
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={handleClick}>
+              Send Email
+            </button>
+          )}
         </div>
       )}
     </Layout>
