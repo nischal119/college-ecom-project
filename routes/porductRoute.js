@@ -16,6 +16,7 @@ import {
   searchProductController,
   updateProductController,
 } from "../controllers/porductController.js";
+import { stripePaymentController } from "../controllers/paymentController.js";
 import formidable from "express-formidable";
 const router = express.Router();
 
@@ -77,8 +78,8 @@ router.get("/similar-products/:pid/:cid", getSimilarProductsController);
 router.get("/product-category/:slug", productsCategoryController);
 //payment routes
 
-router.get("/braintree/token", brainTreeTokenController);
+router.get("/stripe/token", brainTreeTokenController);
 
 //payment
 
-router.post("/braintree/payment",requireSignin, brainTreePaymentController)
+router.post("/stripe/payment", requireSignin, stripePaymentController);

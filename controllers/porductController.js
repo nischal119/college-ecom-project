@@ -6,14 +6,11 @@ import dotenv from "dotenv";
 //payment gateway
 
 dotenv.config();
-import braintree from "braintree";
+import Stripe from "stripe";
 import orderModel from "../models/orderModel.js";
-var gateway = new braintree.BraintreeGateway({
-  environment: braintree.Environment.Sandbox,
-  merchantId: process.env.BRAINTREE_MERCHANT_ID,
-  publicKey: process.env.BRAINTREE_PUBLIC_ID,
-  privateKey: process.env.BRAINTREE_PRIVATE_KEY,
-});
+import userModel from "../models/userModel.js";
+import { sendOrderConfirmationEmail } from "../helpers/authHelper.js";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 console.log(process.env.BRAINTREE_PUBLIC_ID);
 export const createProductController = async (req, res) => {
   try {
@@ -348,26 +345,32 @@ export const productsCategoryController = async (req, res) => {
 //token controller
 export const brainTreeTokenController = async (req, res) => {
   try {
-    gateway.clientToken.generate({}, function (err, response) {
-      if (err) {
-        return res.status(500).send({
-          message: "Error while getting braintree token",
-          success: false,
-          error: err,
-        });
-      }
-      res.status(200).send({
-        message: "Braintree token",
-        success: true,
-        response,
+    const { amount } = req.body;
+
+    if (!amount) {
+      return res.status(400).send({
+        success: false,
+        message: "Amount is required",
       });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: "inr",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    res.status(200).send({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating payment intent:", error);
     res.status(500).send({
-      message: "Error while getting braintree token",
+      message: error.message || "Error creating payment intent",
       success: false,
-      error,
     });
   }
 };
@@ -375,38 +378,197 @@ export const brainTreeTokenController = async (req, res) => {
 //payment controller
 export const brainTreePaymentController = async (req, res) => {
   try {
-    const { cart, nonce } = req.body;
-    let total = 0;
-    cart.forEach((item) => {
-      total += item.price;
+    console.log("Starting payment process...");
+    const { paymentMethodId, amount, cart } = req.body;
+    const user = req.user;
+
+    console.log("Payment request details:", {
+      amount,
+      cartItems: cart?.length,
+      userId: user?._id,
+      paymentMethodId,
     });
-    let newTransaction = gateway.transaction.sale(
-      {
-        amount: total,
-        paymentMethodNonce: nonce,
-        options: {
-          submitForSettlement: true,
+
+    if (!paymentMethodId || !amount) {
+      console.log("Missing required fields:", {
+        paymentMethodId: !!paymentMethodId,
+        amount: !!amount,
+      });
+      return res.status(400).send({
+        success: false,
+        message: "Payment method ID and amount are required",
+      });
+    }
+
+    if (!cart || cart.length === 0) {
+      return res.status(400).send({
+        success: false,
+        message: "Cart is empty",
+      });
+    }
+
+    try {
+      console.log("Creating Stripe payment intent...");
+      // Convert amount to cents for Stripe (amount is in rupees, convert to paise)
+      const amountInPaise = Math.round(parseFloat(amount) * 100);
+
+      console.log("Amount conversion:", {
+        originalAmount: amount,
+        amountInPaise,
+      });
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInPaise,
+        currency: "inr",
+        payment_method: paymentMethodId,
+        confirm: true,
+        description: "Purchase from ecommerce store",
+        metadata: {
+          order_id: Date.now().toString(),
+          user_id: user?._id?.toString(),
+          cart_items: cart.length,
         },
-      },
-      function (error, result) {
-        if (result) {
+        return_url: "http://localhost:5174/dashboard/user/orders",
+        confirmation_method: "manual",
+        use_stripe_sdk: true,
+      });
+
+      console.log("Payment intent created:", {
+        id: paymentIntent.id,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        payment_method: paymentIntent.payment_method,
+      });
+
+      if (paymentIntent.status === "succeeded") {
+        console.log("Payment succeeded, creating order...");
+
+        try {
+          const populatedCart = await Promise.all(
+            cart.map(async (item) => {
+              const product = await productModel
+                .findById(item._id)
+                .select("-photo");
+              if (!product) {
+                throw new Error(`Product not found: ${item._id}`);
+              }
+              return product;
+            })
+          );
+
           const order = new orderModel({
-            products: cart,
-            payment: result,
-            buyer: req.user._id,
-          }).save();
-          res.json({ ok: true });
-        } else {
-          res.status(500).send(error);
+            products: populatedCart,
+            payment: {
+              id: paymentIntent.id,
+              status: "succeeded",
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              created: paymentIntent.created,
+              payment_method: paymentIntent.payment_method,
+              payment_method_types: paymentIntent.payment_method_types,
+              metadata: paymentIntent.metadata,
+            },
+            buyer: user?._id,
+            status: "Processing",
+          });
+
+          await order.save();
+          console.log("Order created successfully:", {
+            orderId: order._id,
+            products: order.products.length,
+            total: paymentIntent.amount,
+            status: order.status,
+            paymentStatus: order.payment.status,
+          });
+
+          // Send confirmation email
+          console.log("Sending order confirmation email...");
+          try {
+            const emailSent = await sendOrderConfirmationEmail(user, order);
+            if (emailSent) {
+              console.log("Order confirmation email sent successfully");
+            } else {
+              console.error("Failed to send order confirmation email");
+            }
+          } catch (emailError) {
+            console.error("Error sending confirmation email:", emailError);
+          }
+
+          res.status(200).send({
+            success: true,
+            message: "Payment successful",
+            paymentIntent: {
+              id: paymentIntent.id,
+              status: "succeeded",
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+            },
+            order: order._id,
+            orderStatus: order.status,
+            paymentStatus: order.payment.status,
+          });
+        } catch (orderError) {
+          console.error("Error creating order:", orderError);
+          try {
+            const refund = await stripe.refunds.create({
+              payment_intent: paymentIntent.id,
+            });
+            console.log(
+              "Payment refunded due to order creation failure:",
+              refund.id
+            );
+          } catch (refundError) {
+            console.error("Error refunding payment:", refundError);
+          }
+          throw new Error("Order creation failed: " + orderError.message);
         }
+      } else {
+        console.log("Payment failed with status:", paymentIntent.status);
+        res.status(400).send({
+          success: false,
+          message: `Payment failed with status: ${paymentIntent.status}`,
+          details: paymentIntent.last_payment_error?.message,
+          paymentStatus: paymentIntent.status,
+        });
       }
-    );
+    } catch (stripeError) {
+      console.error("Stripe API Error:", {
+        type: stripeError.type,
+        message: stripeError.message,
+        code: stripeError.code,
+        decline_code: stripeError.decline_code,
+        param: stripeError.param,
+        stack: stripeError.stack,
+      });
+
+      let errorMessage = "Payment processing failed";
+
+      if (stripeError.type === "StripeCardError") {
+        errorMessage = stripeError.message;
+      } else if (stripeError.type === "StripeInvalidRequestError") {
+        errorMessage = "Invalid payment request";
+      } else if (stripeError.type === "StripeAPIError") {
+        errorMessage = "Payment service temporarily unavailable";
+      }
+
+      return res.status(400).send({
+        success: false,
+        message: errorMessage,
+        error_type: stripeError.type,
+        decline_code: stripeError.decline_code,
+        details: stripeError.message,
+      });
+    }
   } catch (error) {
-    console.log(error);
+    console.error("Server Error:", {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).send({
-      message: "Error while payment",
       success: false,
-      error,
+      message: "An unexpected error occurred while processing your payment",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };

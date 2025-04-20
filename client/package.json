@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^3.6.0",
+    "@stripe/stripe-js": "^7.1.0",
     "axios": "^1.6.3",
     "braintree-web-drop-in-react": "^1.2.1",
     "concurrently": "^8.2.2",

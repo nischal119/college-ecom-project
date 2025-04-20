@@ -326,43 +326,121 @@ export const updateOrderStatusController = async (req, res) => {
 
 //send email controller
 export const sendEmailController = async (req, res) => {
+  let transporter;
   try {
     const { senderName, senderEmail, adminEmail } = req.body;
+    console.log("Starting seller request email process...");
+    console.log("Sender details:", { name: senderName, email: senderEmail });
+    console.log("Admin email:", adminEmail);
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+    // Verify environment variables
+    if (!process.env.GMAIL_USER_NAME || !process.env.GMAIL_PASSWORD) {
+      console.error("Missing Gmail credentials in environment variables");
+      return res.status(500).json({
+        success: false,
+        message: "Email service configuration error",
+      });
+    }
+
+    console.log("Using Gmail account:", process.env.GMAIL_USER_NAME);
+
+    // Create transporter with timeout
+    transporter = nodemailer.createTransport({
       service: "gmail",
-      port: 456, // Secure connection
+      host: "smtp.gmail.com",
+      port: 587,
       secure: false,
       auth: {
         user: process.env.GMAIL_USER_NAME,
         pass: process.env.GMAIL_PASSWORD,
       },
+      debug: true,
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000, // 10 seconds
+      socketTimeout: 10000, // 10 seconds
     });
 
+    // Verify transporter connection with timeout
+    try {
+      await Promise.race([
+        transporter.verify(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Connection timeout")), 10000)
+        ),
+      ]);
+      console.log("Transporter verified successfully");
+    } catch (verifyError) {
+      console.error("Transporter verification failed:", verifyError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to connect to email server",
+        error: verifyError.message,
+      });
+    }
+
     const mailOptions = {
-      from: process.env.GMAIL_USER_NAME, // Ensure the sender matches your SMTP account
+      from: process.env.GMAIL_USER_NAME,
       to: adminEmail,
       subject: "Becoming a Seller Inquiry",
       html: `
-        <p>Hi Admin,</p>
-        <p>${senderName} (${senderEmail}) has requested to become a seller.</p>
-        <p>
-      
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #333;">New Seller Request</h2>
+          <p style="color: #666;">A user has requested to become a seller on your platform.</p>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #333; margin-bottom: 10px;">User Details:</h3>
+            <p><strong>Name:</strong> ${senderName}</p>
+            <p><strong>Email:</strong> ${senderEmail}</p>
+          </div>
+
+          <p style="color: #666; font-size: 14px;">Please review this request and take appropriate action.</p>
+          <p style="color: #666; font-size: 14px;">Thank you!</p>
+        </div>
       `,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    console.log("Mail options:", {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+    });
+
+    console.log("Sending email...");
+    const info = await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Email sending timeout")), 30000)
+      ),
+    ]);
+    console.log("Email sent successfully. Response:", {
+      messageId: info.messageId,
+      response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
+    });
 
     res.status(200).json({
       success: true,
       message: "Email sent successfully",
-      info,
+      info: {
+        messageId: info.messageId,
+        response: info.response,
+      },
     });
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Detailed error in sending email:", {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
+
     let errorMessage = "Error sending email";
-    if (error.code === "EAUTH") {
+    if (
+      error.message === "Connection timeout" ||
+      error.message === "Email sending timeout"
+    ) {
+      errorMessage = "Email service timed out. Please try again.";
+    } else if (error.code === "EAUTH") {
       errorMessage = "Authentication failed. Please check your credentials.";
     } else if (error.code === "ECONNECTION") {
       errorMessage =
@@ -374,6 +452,11 @@ export const sendEmailController = async (req, res) => {
       message: errorMessage,
       error: error.message || error,
     });
+  } finally {
+    // Close the transporter if it was created
+    if (transporter) {
+      transporter.close();
+    }
   }
 };
 
