@@ -1,36 +1,46 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
-import { FaOpencart } from "react-icons/fa";
+import {
+  FaOpencart,
+  FaUser,
+  FaSignInAlt,
+  FaUserPlus,
+  FaHome,
+  FaList,
+  FaShoppingCart,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import { useAuth } from "../../context/Auth.jsx";
 import toast from "react-hot-toast";
 import SearchInput from "../Form/SearchInput.jsx";
 import useCategory from "../../hooks/useCategory.js";
 import { useCart } from "../../context/Cart.jsx";
 import { Badge } from "antd";
+import "../../styles/Header.css";
+
 const Header = () => {
   const [auth, setAuth] = useAuth();
   const categories = useCategory();
-  const [cart, setCart] = useCart();
-  const handelLogout = () => {
+  const { cart, clearCartLocally } = useCart();
+
+  const handleLogout = () => {
     setAuth({
       ...auth,
       user: null,
-      token: null,
+      token: "",
     });
     localStorage.removeItem("auth");
-    localStorage.removeItem("cart");
-    localStorage.removeItem("okResponse");
-    localStorage.removeItem("name");
-    toast.success("Logout Successfull");
+    clearCartLocally();
+    toast.success("Logout Successfully");
   };
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-gradient">
         <div className="container-fluid">
-          <Link className="navbar-brand " to="/">
-            <FaOpencart style={{ fontSize: "30px", margin: "10px" }} />
-            E-commerce
+          <Link className="navbar-brand" to="/">
+            <FaOpencart className="brand-icon" />
+            <span className="brand-text">E-commerce</span>
           </Link>
           <button
             className="navbar-toggler"
@@ -47,38 +57,25 @@ const Header = () => {
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               <SearchInput />
               <li className="nav-item">
-                <NavLink className="nav-link " to="/">
-                  Home
+                <NavLink className="nav-link" to="/">
+                  <FaHome className="nav-icon" />
+                  <span>Home</span>
                 </NavLink>
               </li>
 
               <li className="nav-item dropdown">
                 <Link
-                  className="nav-link dropdown-toggle"
-                  role="button"
-                  data-bs-toggle="dropdown"
-                  // aria-expanded="false"
+                  className="nav-link dropdown-toggle d-flex align-items-center"
                   to={"/categories"}
+                  data-bs-toggle="dropdown"
                 >
-                  Categories
+                  <FaList style={{ marginRight: "5px" }} /> Categories
                 </Link>
-
-                <ul
-                  className="dropdown-menu"
-                  style={{
-                    maxHeight: "150px",
-                    overflowY: "scroll",
-                  }}
-                >
-                  <li>
-                    {/* <Link className="dropdown-item " to={"/categories"}>
-                      All Categories
-                    </Link> */}
-                  </li>
+                <ul className="dropdown-menu dropdown-menu-scrollable">
                   {categories?.map((item) => (
                     <Link
                       key={item?._id}
-                      className="dropdown-item "
+                      className="dropdown-item"
                       to={`/category/${item.slug}`}
                     >
                       <li key={item?._id}>{item?.name}</li>
@@ -90,13 +87,15 @@ const Header = () => {
               {!auth.user ? (
                 <>
                   <li className="nav-item">
-                    <NavLink className="nav-link " to="/register">
-                      Register
+                    <NavLink className="nav-link" to="/register">
+                      <FaUserPlus className="nav-icon" />
+                      <span>Register</span>
                     </NavLink>
                   </li>
                   <li className="nav-item">
-                    <NavLink className="nav-link " to="/login">
-                      Login
+                    <NavLink className="nav-link" to="/login">
+                      <FaSignInAlt className="nav-icon" />
+                      <span>Login</span>
                     </NavLink>
                   </li>
                 </>
@@ -104,40 +103,42 @@ const Header = () => {
                 <>
                   <li className="nav-item dropdown">
                     <NavLink
-                      className="nav-link dropdown-toggle"
+                      className="nav-link dropdown-toggle d-flex align-items-center"
+                      href="#"
                       role="button"
                       data-bs-toggle="dropdown"
-                      // aria-expanded="false"
+                      aria-expanded="false"
                     >
-                      {auth.user.name}
+                      <FaUser style={{ marginRight: "5px" }} /> {auth.user.name}
                     </NavLink>
                     <ul className="dropdown-menu">
                       <li>
                         <NavLink
-                          className="dropdown-item"
                           to={`/dashboard/${
                             auth?.user?.role === 1 ? "admin" : "user"
                           }`}
+                          className="dropdown-item"
                         >
                           Dashboard
                         </NavLink>
                       </li>
-                      <li className="nav-item">
+                      <li>
                         <NavLink
-                          className=" dropdown-item "
-                          onClick={handelLogout}
-                          to={"/login"}
+                          onClick={handleLogout}
+                          to="/login"
+                          className="dropdown-item"
                         >
-                          Log Out?
+                          <FaSignOutAlt style={{ marginRight: "5px" }} /> Logout
                         </NavLink>
                       </li>
                       {auth?.user?.role !== 1 && (
                         <li className="nav-item">
                           <NavLink
-                            className=" dropdown-item "
+                            className="dropdown-item"
                             to={"/become-seller"}
                           >
-                            Become a Seller ?
+                            <FaOpencart className="nav-icon" />
+                            Become a Seller
                           </NavLink>
                         </li>
                       )}
@@ -147,9 +148,12 @@ const Header = () => {
               )}
 
               <li className="nav-item">
-                <Badge count={cart?.length} showZero>
-                  <NavLink className="nav-link" to="/cart">
-                    Cart
+                <Badge count={cart?.length} showZero offset={[10, -5]}>
+                  <NavLink
+                    to="/cart"
+                    className="nav-link d-flex align-items-center"
+                  >
+                    <FaShoppingCart style={{ marginRight: "5px" }} /> Cart
                   </NavLink>
                 </Badge>
               </li>

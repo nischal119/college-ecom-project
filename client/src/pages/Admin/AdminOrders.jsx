@@ -11,6 +11,15 @@ import { get } from "mongoose";
 
 const { Option } = Select;
 
+// Define possible order statuses
+const orderStatuses = [
+  "Not Processed",
+  "Processing",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+];
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState([
@@ -86,15 +95,15 @@ const AdminOrders = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status, record) => (
+      render: (currentStatus, record) => (
         <Select
           style={{ width: 150 }}
           onChange={(value) => handelChange(record._id, value)}
-          defaultValue={status}
+          defaultValue={currentStatus}
         >
-          {status?.map((item, index) => (
-            <Option key={index} value={item}>
-              <Tag color={getStatusColor(item)}>{item}</Tag>
+          {orderStatuses.map((statusOption, index) => (
+            <Option key={index} value={statusOption}>
+              <Tag color={getStatusColor(statusOption)}>{statusOption}</Tag>
             </Option>
           ))}
         </Select>

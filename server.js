@@ -7,6 +7,7 @@ import authRoute from "./routes/authRoute.js";
 import creategoryRoute from "./routes/categoryRoutes.js";
 import productRoute from "./routes/porductRoute.js";
 import paymentRoute from "./routes/paymentRoute.js";
+import cartRoute from "./routes/cartRoutes.js";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -55,6 +56,7 @@ app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/category", creategoryRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/payment", paymentRoute);
+app.use("/api/v1/cart", cartRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

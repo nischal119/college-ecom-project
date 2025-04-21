@@ -40,7 +40,6 @@ const MyCarousel = ({ images }) => {
               src={src}
               className="d-block  carousel-image "
               alt={`Slide ${index + 1}`}
-             
             />
           </div>
         ))}

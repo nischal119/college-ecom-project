@@ -2,7 +2,19 @@ import React, { useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaQuestionCircle,
+  FaUserPlus,
+} from "react-icons/fa";
+import "../../styles/AuthStyles.css"; // Import the shared CSS
+
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -12,8 +24,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  //form submit
-  const handelSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post(
@@ -29,129 +40,144 @@ const Register = () => {
       );
 
       if (res.data.success) {
-        localStorage.setItem("name", name);
-        toast.success("Register Successfully");
+        toast.success("Registration Successful! Please login.");
         navigate("/login");
+      } else {
+        toast.error(res.data.message); // Show server-side error message
       }
     } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
+      toast.error(
+        error.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
     }
   };
 
-  // console.log(process.env.REACT_APP_API);
   return (
-    <Layout title={"Register"}>
-      <div className="register">
-        <h1>Register</h1>
-
-        <form
-          onSubmit={handelSubmit}
-          style={{
-            boxShadow: "0px 0px 10px 0px #0000001a",
-            padding: "20px",
-            borderRadius: "10px",
-          }}
+    <Layout title={"Register - Ecommerce App"}>
+      <motion.div
+        className="auth-container"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="auth-form-wrapper"
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <div className="flex-div d-flex justify-content-between">
-            <div className="mb-3 mx-3">
-              <label htmlFor="exampleInputEmail1" className="form-label">
-                Name <span className="red-star">*</span>
-              </label>
+          <h1 className="auth-title">Register</h1>
+          <p className="auth-subtitle">Create your account</p>
+          <form onSubmit={handleSubmit}>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaUser className="input-icon" />
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="form-control"
-                id="exampleInputEmail1"
+                className="auth-input"
+                placeholder="Enter your name"
                 required
               />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="exampleInputEmail1" className="form-label">
-                Email <span className="red-star">*</span>
-              </label>
+            </motion.div>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaEnvelope className="input-icon" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="form-control"
-                id="exampleInputEmail1"
+                className="auth-input"
+                placeholder="Enter your email"
                 required
               />
-            </div>
-          </div>
-          <div className="flex-div d-flex">
-            <div className="mb-3 mx-3">
-              <label htmlFor="exampleInputPassword1" className="form-label">
-                Password <span className="red-star">*</span>
-              </label>
+            </motion.div>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaLock className="input-icon" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="form-control"
-                id="exampleInputPassword1"
+                className="auth-input"
+                placeholder="Enter your password"
                 required
               />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="exampleInputEmail1" className="form-label">
-                Phone <span className="red-star">*</span>
-              </label>
+            </motion.div>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaPhone className="input-icon" />
               <input
-                type="number"
+                type="tel" // Use type='tel' for phone numbers
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="form-control"
-                id="exampleInputEmail1"
+                className="auth-input"
+                placeholder="Enter your phone number"
                 required
               />
-            </div>
-          </div>
-          <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">
-              Address <span className="red-star">*</span>
-            </label>
-            <input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              type="text"
-              className="form-control"
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="exampleInputEmail1" className="form-label">
-              Security Question <span className="red-star">*</span>
-            </label>
-            <input
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              type="text"
-              className="form-control"
-              placeholder="What is your favourite sports?"
-              required
-            />
-          </div>
+            </motion.div>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaMapMarkerAlt className="input-icon" />
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="auth-input"
+                placeholder="Enter your address"
+                required
+              />
+            </motion.div>
+            <motion.div
+              className="input-group"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FaQuestionCircle className="input-icon" />
+              <input
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="auth-input"
+                placeholder="Security answer (e.g., favorite pet)"
+                required
+              />
+            </motion.div>
 
-          <button type="submit" className="btn submit-button">
-            Submit
-          </button>
-        </form>
-        <p
-          onClick={() => navigate("/login")}
-          className="mt-3 "
-          style={{
-            textDecoration: "underline",
-            color: "blue",
-            cursor: "pointer",
-            fontSize: "18px",
-          }}
-        >
-          Already have an account?
-        </p>
-      </div>
+            <motion.button
+              type="submit"
+              className="auth-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Register <FaUserPlus style={{ marginLeft: "8px" }} />
+            </motion.button>
+          </form>
+          <p className="auth-switch">
+            Already have an account?{" "}
+            <Link to="/login" className="auth-link">
+              Login
+            </Link>
+          </p>
+        </motion.div>
+      </motion.div>
     </Layout>
   );
 };

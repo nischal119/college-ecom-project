@@ -1,30 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
 import UserMenu from "../../components/Layout/Routes/UserMenu";
 import { useAuth } from "../../context/Auth";
-import axios from "axios";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaEdit,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
+import axios from "axios";
+import "../../styles/Dashboard.css";
 
 const Profile = () => {
+  const [auth, setAuth] = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [password, setPassword] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
-  const [auth, setAuth] = useAuth();
-
-  //get user data
+  // Initialize form with user data
   useEffect(() => {
-    const { name, email, phone, address } = auth?.user;
-    setName(name);
-    setEmail(email);
-    setPhone(phone);
-    setAddress(address);
+    if (auth?.user) {
+      const { name, email, phone, address } = auth.user;
+      setName(name || "");
+      setEmail(email || "");
+      setPhone(phone || "");
+      setAddress(address || "");
+    }
   }, [auth?.user]);
 
-  const handelSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const { data } = await axios.put(
@@ -32,128 +41,170 @@ const Profile = () => {
         {
           name,
           email,
+          password,
           phone,
           address,
-          password,
-          answer,
+        },
+        {
+          headers: {
+            Authorization: auth?.token,
+          },
         }
       );
-      if (data.error) {
-        toast.error(data.error);
-      } else {
-        setAuth({
-          ...auth,
-          user: data?.updatedUser,
-        });
+
+      if (data?.success) {
+        setAuth({ ...auth, user: data?.updatedUser });
         let ls = localStorage.getItem("auth");
         ls = JSON.parse(ls);
-        ls.user = data?.updatedUser;
+        ls.user = data.updatedUser;
         localStorage.setItem("auth", JSON.stringify(ls));
-        toast.success("Profile Updated Successfully");
+        toast.success("Profile updated successfully");
+        setIsEditing(false);
+        setPassword("");
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      toast.error("Something went wrong");
     }
   };
 
   return (
-    <Layout title={"Profile"}>
-      <div className="container">
+    <Layout title={"Your Profile"}>
+      <div className="dashboard-container">
         <div className="row">
           <div className="col-md-3">
-            <UserMenu />
+            <div className="menu-container">
+              <div className="menu-header">User Panel</div>
+              <UserMenu />
+            </div>
           </div>
-          <div className="col-md-2"></div>
-          <div
-            className="col-md-8"
-            style={{
-              width: "50vh",
-            }}
-          >
-            <h1 className="mb-5 text-center">Update Profile</h1>
-            <form onSubmit={handelSubmit}>
-              <div className="mb-3">
-                <label htmlFor="exampleInputEmail1" className="form-label">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="form-control"
-                  id="exampleInputEmail1"
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="exampleInputEmail1" className="form-label">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="form-control"
-                  id="exampleInputEmail1"
-                  disabled
-                  style={{
-                    cursor: "not-allowed",
-                  }}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="exampleInputPassword1" className="form-label">
-                  Password <span className="red-star">*</span>
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="form-control"
-                  id="exampleInputPassword1"
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="exampleInputEmail1" className="form-label">
-                  Phone
-                </label>
-                <input
-                  type="number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="form-control"
-                  id="exampleInputEmail1"
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="exampleInputEmail1" className="form-label">
-                  Address
-                </label>
-                <input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  type="text"
-                  className="form-control"
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="exampleInputEmail1" className="form-label">
-                  Security Question
-                </label>
-                <input
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  type="text"
-                  className="form-control"
-                  placeholder="What is your favourite sports ?"
-                />
+          <div className="col-md-9">
+            <div className="dashboard-card">
+              <div className="dashboard-header">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h1 className="dashboard-title">Profile Settings</h1>
+                  <button
+                    className="action-button"
+                    onClick={() => setIsEditing(!isEditing)}
+                    style={{ width: "auto" }}
+                  >
+                    <FaEdit /> {isEditing ? "Cancel Edit" : "Edit Profile"}
+                  </button>
+                </div>
               </div>
 
-              <button type="submit" className="btn submit-button">
-                Update
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} className="user-info mt-4">
+                <div className="info-item">
+                  <div className="info-icon">
+                    <FaUser />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Full Name</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                      />
+                    ) : (
+                      <div className="info-value">{name}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <FaEnvelope />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Email Address</div>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                      />
+                    ) : (
+                      <div className="info-value">{email}</div>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="info-item">
+                    <div className="info-icon">
+                      <FaUser />
+                    </div>
+                    <div className="info-content">
+                      <div className="info-label">Password</div>
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter new password (leave empty to keep current)"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <FaPhone />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Phone Number</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Enter your phone number"
+                      />
+                    ) : (
+                      <div className="info-value">
+                        {phone || "Not provided"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <FaMapMarkerAlt />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Address</div>
+                    {isEditing ? (
+                      <textarea
+                        className="form-control"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Enter your address"
+                        rows="3"
+                      />
+                    ) : (
+                      <div className="info-value">
+                        {address || "Not provided"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="action-buttons">
+                    <button type="submit" className="action-button">
+                      Save Changes
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         </div>
       </div>
