@@ -150,7 +150,7 @@ const CartProvider = ({ children }) => {
   return (
     // Provide cart state, add/remove functions, and clear function
     <CartContext.Provider
-      value={{ cart, addItem, removeItem, clearCartLocally }}
+      value={{ cart, setCart, addItem, removeItem, clearCartLocally }}
     >
       {children}
     </CartContext.Provider>

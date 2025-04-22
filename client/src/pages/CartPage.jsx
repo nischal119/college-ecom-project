@@ -158,7 +158,7 @@ const CheckoutForm = ({ totalAmount, cart, setCart }) => {
 
 const CartPage = () => {
   const [auth] = useAuth();
-  const { cart, removeItem } = useCart();
+  const { cart, removeItem, setCart } = useCart();
   const navigate = useNavigate();
 
   // Calculate total price
@@ -265,7 +265,11 @@ const CartPage = () => {
 
                 {auth?.user?.address ? (
                   <Elements stripe={stripePromise}>
-                    <CheckoutForm totalAmount={calculateTotal()} cart={cart} />
+                    <CheckoutForm
+                      totalAmount={calculateTotal()}
+                      cart={cart}
+                      setCart={setCart}
+                    />
                   </Elements>
                 ) : (
                   <div className="address-warning">
